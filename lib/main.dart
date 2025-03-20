@@ -1,26 +1,28 @@
+// import 'dart:nativewrappers/_internal/vm/lib/math_patch.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
-// Partie robot
-Robot robot = Robot("CY-TORYx3", Inventaire([], 5, 100));
+import 'dart:math';
+
+// Partie initialisation
+Inventaire sacados = Inventaire([], 5, 100);
+Robot robot = Robot("CY-TORYx3", sacados);
+
 void main() {
   runApp(const MyApp());
-
-  // // Partie robot
-  // Robot robot = Robot("CY-TORYx3", Inventaire([], 5, 100));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Namer App',
+      title: 'Cyber Inventory',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 79, 92, 82)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(94, 83, 95, 83)),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Cyber Inventory'),
+      home: const MyHomePage(title: 'CYBERWORLD - Une aventure arduinesque'),
     );
   }
 }
@@ -28,66 +30,72 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
+
 List<String> messages = [];
-String show() {
-  return "vide";
-}
+
+
 class _MyHomePageState extends State<MyHomePage> {
-  // int _counter = 0;
-  
-  void _incrementCounter() {
+  ScrollController scrollController = ScrollController();
+  void _voir() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      // _counter++;
+      robot.voirInventaire();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
     });
   }
-
-  // void _showMessages() {
-  //   // for(int i = 0; i < messages.length; i++) {
-  //   //   if(messages.isEmpty) {
-  //   //     "Vide";
-  //   //   } else {
-  //   //     messages[i];
-  //   //   }
-  //   // } 
-  //   "vide";
-  // }
-
+  void _fouiller() {
+    setState(() {
+      robot.fouiller();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    });
+  }
+  void _ajouter() {
+    setState(() {
+      robot.ramasser();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    });
+  }
+  void _deposer() {
+    setState(() {
+      robot.deposer();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: const Color.fromARGB(255, 66, 66, 66),
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title, style:TextStyle(color: Colors.white)),
+        backgroundColor: const Color.fromARGB(238, 54, 97, 70),
+        title: Text(widget.title, style: TextStyle(color: Colors.white)),
       ),
       body: Center(
         child: Column(
@@ -98,87 +106,67 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             Text("Inventaire : ..."),
-            Text("Nbr item : ... | Poids total : ..."),
-            Text("Message : ${show()}"),
+            Text("Nbr item : ${sacados.items.length}/${sacados.maxLength} | Poids total : ${sacados.poidsTotal()}/${sacados.maxPoids}kg"),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(messages[index], style: TextStyle(fontFamily: 'SourceCodePro')),
+                  );
+                },
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 IconButton(
                   icon: Image.asset('assets/btn/fouiller.png'),
-                  splashColor: Colors.black12,
-                  tooltip: 'Fouiller',
+                  tooltip: 'Fouiller (cherche un item au hasard)',
                   onPressed: () {
-                    robot.ramasser();
+                    _fouiller();
                   },
                 ),
                 IconButton(
                   icon: Image.asset('assets/btn/ramasser.png'),
-                  tooltip: 'Ramasser',
+                  tooltip: 'Ramasser (permet de ramasser l\'item trouvé)',
                   onPressed: () {
-                    // setState(() {
-                    //   _volume += 10
-                    // });
+                    _ajouter();
                   },
                 ),
                 IconButton(
                   icon: Image.asset('assets/btn/deposer.png'),
-                  tooltip: 'Déposer',
+                  tooltip: 'Déposer (permet de jeter le dernier item ajouté)',
                   onPressed: () {
-                    // setState(() {
-                    //   _volume += 10;
-                    // });
+                    _deposer();
                   },
                 ),
                 IconButton(
                   icon: Image.asset('assets/btn/voir.png'),
-                  tooltip: 'Voir',
+                  tooltip: 'Voir (permet de voir le sac à dos)',
                   onPressed: () {
-                    robot.voirInventaire();
+                    _voir();
                   },
-                )
-            ],
+                ),
+              ],
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
 }
 
-// CODE DART DE BASE 
-
-
-// List<String> loot = ["Epée rouillée", "Potion de soin", "Arc en bois", "Bouclier en fer"];
-
-// void main() {
-//   print("Quel est votre nom ?");
-//   String username = stdin.readLineSync()!;
-//   Inventaire inventaire = Inventaire([], 5, 100);
-//   Robot robot = Robot(username, inventaire);
-//   bool isOut = false;
-//   while (isOut == false) {
-//     print("Que souhaitez-vous faire ?");
-//     print("[1] -> Ramasser un item | [2] -> Déposer un item | [3] -> Voir son inventaire | [4] -> Rentrer à la maison");
-//     int answer = int.parse(stdin.readLineSync()!);
-//     if(answer == 1) {
-//       robot.ramasser();
-//     } else if(answer == 2) {
-//       robot.deposer();
-//     } else if(answer == 3) {
-//       robot.voirInventaire();
-//     } else if(answer == 4) {
-//       isOut = true;
-//       print("Il fait nuit... ${robot._nom} rentre chez lui...");
-//     } else {
-//       print("Merci de choisir entre 1, 2, 3 ou 4 seulement");
-//     }
-//   }
-// }
+List<List<dynamic>> loot = [
+  ["Epée rouillée", 10],
+  ["Potion de soin", 1],
+  ["Arc en émeraude", 5],
+  ["Couteau cassé", 2],
+  ["Heaume du Roi", 10],
+  ["Cheval malade", 100],
+  ["Trésor national", 50],
+  ["Pique-nique de Mamie", 7]];
 
 class Item {
   String _nom;
@@ -189,6 +177,7 @@ class Item {
   String getName() {
     return _nom;
   }
+
   int getPoids() {
     return _poids;
   }
@@ -200,6 +189,9 @@ class Inventaire {
   int maxPoids;
 
   Inventaire(this.items, this.maxLength, this.maxPoids);
+
+  String itemNameLoot = "";
+  int itemWeightLoot = 0;
 
   int checkFullOrEmpty(int listLengt, int type) {
     int rcheck = 0;
@@ -217,63 +209,105 @@ class Inventaire {
     return rcheck;
   }
 
-  void afficherInventaire() {
-    int listLength = items.length;
-    messages.add("-----------------");
-    messages.add("Inventaire (${maxLength -(maxLength - listLength)}/$maxLength) :");
-    items.sort((a, b) => a.toString().compareTo(b.toString())); // permet de trier par ordre alphabétique
-    for(int i = 0; i < items.length; i++) {
-      messages.add("Item $i -> ${items[i].getName()} (${items[i].getPoids()} kg)");
+  int checkWeight(int weight, int type) {
+    int rcheck = 0;
+    if(maxPoids <= weight) {
+      if(type == 1) {
+        messages.add("(Poids max de ${maxPoids}kg atteint)");
+      }
+      rcheck = 1;
+    } else {
+      if(type == 2) {
+        messages.add("(Poids restant : ${maxPoids - weight}kg)");
+      }
+      rcheck = 2;
     }
-    checkFullOrEmpty(items.length, 1);
-    messages.add("Poids total : ${poidsTotal()}kg");
+    return rcheck;
+  }
+  
+  void afficherInventaire() {
     messages.add("-----------------");
+    messages.add("Inventaire (${items.length}/$maxLength) :");
+    items.sort((a, b) => a.toString().compareTo(b.toString()));
+    for (int i = 0; i < items.length; i++) {
+      messages.add("Item ${i + 1} -> ${items[i].getName()} (${items[i].getPoids()}kg)");
+    }
+    messages.add("Poids total : ${poidsTotal()}/${maxPoids}kg");
+    checkFullOrEmpty(items.length, 1);
+    checkWeight(poidsTotal(), 1);
+    messages.add("-----------------");
+  }
+
+  int poidsTotal() {
+    int poidsList = 0;
+    for (int i = 0; i < items.length; i++) {
+      poidsList += items[i].getPoids();
+    }
+    return poidsList;
+  }
+
+  String aleatoireItem() {
+    var rand = Random().nextInt(loot.length);
+    // permet d'avoir une chance sur 2 d'avoir un nouvel item
+    if(Random().nextBool()) {
+      // si le cas où l'user obtient un nouvel item, choix de l'item au hasard dans la list loot
+      String itemAddName = loot[rand][0];
+      int itemAddWeight = loot[rand][1];
+      itemNameLoot = itemAddName;
+      itemWeightLoot = itemAddWeight;
+      return "$itemAddName (${itemAddWeight}kg)";
+    } else {
+      return "null";
+    }
   }
 
   String ajouterItem() {
     if(checkFullOrEmpty(items.length, 0) == 1) {
       return "null";
     } else {
-      print("Nom de l'item : ");
-      String itemName = stdin.readLineSync()!; // permet à l'utilisateur une entrée, type String
-      print("Poids de l'item : ");
-      String itemPoids = stdin.readLineSync()!;
-      String itemAdd = ("$itemName ($itemPoids kg)");
-      Item item  = Item(itemName, int.parse(itemPoids));
-      items.add(item);
-      checkFullOrEmpty(items.length, 1);
-      return itemAdd;
+      if(checkWeight(poidsTotal(), 0) == 1) {
+        return "null";
+      } else {
+        int count = 0;
+        // test si l'user a fouiller avant de pouvoir ajouter l'item
+        if(itemNameLoot != "" && itemWeightLoot != 0) {
+          for(int x = 0; x < items.length; x++) {
+            // test via la boucle for et if, si l'item n'est pas déjà présent dans l'inventaire
+            if(itemNameLoot == items[x].getName() && itemWeightLoot == items[x].getPoids()) {
+              count++;
+            }
+          }
+        } else {
+          return "null3";
+        }
+        if(count > 0) {
+          return "null2";
+        } else {
+          Item newItem = Item(itemNameLoot, itemWeightLoot);
+          items.add(newItem);
+          return "$itemNameLoot ($itemWeightLoot kg)";
+        }
+      }
     }
   }
 
   String supprimerItem() {
     bool isRemove = false;
+    String itemRemove = "";
     if(checkFullOrEmpty(items.length, 0) == 2) {
       return "null2";
     } else {
-      print("Nom de l'item :");
-      String itemRemove = stdin.readLineSync()!;
-      for(int i = 0; i < items.length; i++) {
-        if(items[i].getName() == itemRemove) {
-          items.removeAt(i);
-          isRemove = true;
-        }
-      }
-      checkFullOrEmpty(items.length, 1);
-      if (isRemove == false) {
-        return "null1";
-      } else {
-        return itemRemove;
-      }
+      String itemRemoveName = items.last.getName();
+      int itemRemoveWeight = items.last.getPoids();
+      items.removeAt(items.indexOf(items.last));
+      itemRemove = "$itemRemoveName (${itemRemoveWeight}kg)";
+      isRemove = true;
     }
-  }
-
-  int poidsTotal() {
-    int poidsList = 0;
-    for(int i = 0; i < items.length; i++) {
-      poidsList += items[i].getPoids();
+    if (isRemove == false) {
+      return "null";
+    } else {
+      return itemRemove;
     }
-    return poidsList;
   }
 }
 
@@ -283,12 +317,28 @@ class Robot {
 
   Robot(this._nom, this._inventaire);
 
+  void fouiller() {
+    String item = _inventaire.aleatoireItem();
+    if(item == "null") {
+      messages.add("$_nom n'a rien trouvé");
+    } else {
+      messages.add("$_nom trouve au fond de sa poche '$item'");
+      messages.add("(Pour ajouter '$item' à votre inventaire : cliquez sur le bouton 'Ramasser', sinon ignorez et relancez)");
+    }
+  }
+
   void ramasser() {
     String item = _inventaire.ajouterItem();
     if(item == "null") {
       messages.add("$_nom n'arrive pas à mettre l'item dans son sac (inventaire plein)");
+    } else if(item == "null2") {
+      messages.add("$_nom a trouvé le même item dans son sac, il jette donc celui trouvé");
+    } else if(item == "null3") {
+      messages.add("$_nom n'a pas fouillé autour de lui");
     } else {
       messages.add("$_nom ramasse '$item'");
+      _inventaire.checkFullOrEmpty(_inventaire.items.length, 1);
+      _inventaire.checkWeight(_inventaire.poidsTotal(), 2);
     }
   }
 
@@ -300,18 +350,14 @@ class Robot {
 
   void deposer() {
     String item = _inventaire.supprimerItem();
-    if(item == "null1") {
+    if(item == "null") {
       messages.add("$_nom ne trouve pas l'item dans son sac (item introuvable)");
     } else if(item == "null2") {
       messages.add("$_nom n'a rien dans son sac (inventaire vide)");
     } else {
       messages.add("$_nom jette '$item'");
+      _inventaire.checkFullOrEmpty(_inventaire.items.length, 1);
+      _inventaire.checkWeight(_inventaire.poidsTotal(), 2);
     }
   }
 }
-
-
-
-
-
-

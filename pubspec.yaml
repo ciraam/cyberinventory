@@ -28,3 +28,7 @@ flutter:
     - assets/btn/voir.png
     - assets/btn/ramasser.png
     - assets/btn/deposer.png
+  fonts:
+    - family: 'SourceCodePro'
+      fonts:
+        - asset: assets/font/SourceCodePro.ttf
