@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:math';
 
-// Partie initialisation
+// partie initialisation
 Inventaire sacados = Inventaire([], 5, 100);
 Robot robot = Robot("CY-TORYx3", sacados);
 
@@ -38,58 +38,43 @@ class MyHomePage extends StatefulWidget {
 
 List<String> messages = [];
 
-
 class _MyHomePageState extends State<MyHomePage> {
   ScrollController scrollController = ScrollController();
+
+  void _scrollAuto() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
   void _voir() {
     setState(() {
       robot.voirInventaire();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
+      _scrollAuto();
     });
   }
   void _fouiller() {
     setState(() {
       robot.fouiller();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
+      _scrollAuto();
     });
   }
   void _ajouter() {
     setState(() {
       robot.ramasser();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
+      _scrollAuto();
     });
   }
   void _deposer() {
     setState(() {
       robot.deposer();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
+      _scrollAuto();
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,17 +90,26 @@ class _MyHomePageState extends State<MyHomePage> {
               robot._nom,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            Text("Inventaire : ..."),
             Text("Nbr item : ${sacados.items.length}/${sacados.maxLength} | Poids total : ${sacados.poidsTotal()}/${sacados.maxPoids}kg"),
             Expanded(
               child: ListView.builder(
                 controller: scrollController,
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(messages[index], style: TextStyle(fontFamily: 'SourceCodePro')),
-                  );
-                },
+                bool isFull = messages[index].contains("Inventaire plein");
+                return ListTile(
+                  title: Text(
+                    messages[index],
+                    style: TextStyle(
+                      fontFamily: 'SourceCodePro',
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15.5,
+                      backgroundColor: const Color.fromARGB(14, 17, 17, 17),
+                      color: isFull? Colors.red : Colors.black,
+                    ),
+                  ),
+                );
+                }
               ),
             ),
             Row(
@@ -257,6 +251,8 @@ class Inventaire {
       itemWeightLoot = itemAddWeight;
       return "$itemAddName (${itemAddWeight}kg)";
     } else {
+      itemNameLoot = "";
+      itemWeightLoot = 0;
       return "null";
     }
   }
