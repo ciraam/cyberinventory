@@ -2,12 +2,69 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:math';
+import 'package:sqflite/sqflite.dart';
+import 'dart:async';
+import 'package:path/path.dart' as path;
 
 // partie initialisation
 Inventaire sacados = Inventaire([], 5, 100);
 Robot robot = Robot("CY-TORYx3", sacados);
 
-void main() {
+
+
+void main() async {
+  // var db = await openDatabase('../bdd.db');
+  WidgetsFlutterBinding.ensureInitialized();
+  final database = openDatabase(path.join(await getDatabasesPath(), 'bdd.db'),
+    onCreate: (db, version) {
+      return db.execute('CREATE TABLE item(item_id INTEGER PRIMARY KEY, item_nom TEXT, item_poids INTEGER)');
+    },
+    version: 1,
+  );
+  Future<void> insertDog(Item item) async {
+    final db = await database;
+    await db.insert(
+      'item',
+      item.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+  var nI = Item(0, 'Rodéo des bois', 35);
+  await insertDog(nI);
+  Future<List<Item>> getItems() async {
+    final db = await database;
+    final List<Map<String, Object?>> itemMaps = await db.query('item');
+    return [
+      for (final {'item_id': id as int, 'item_nom': nom as String, 'item_poids': poids as int} 
+          in itemMaps)
+        Item(item_id: id, item_nom: nom, item_poids: poids),
+    ];
+  }
+  print(await getItems());
+  Future<void> updateItem(Item item) async {
+    final db = await database;
+    await db.update(
+      'item',
+      item.toMap(),
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [item._id],
+    );
+  }
+  Item nI2 = Item(0, "Ari", 0);
+  await updateItem(nI2);
+  print(await getItems());
+  Future<void> deleteItem(int id) async {
+    final db = await database;
+    await db.delete(
+      'item',
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [id],
+    );
+  }
+  // await deleteItem(0);
+
   runApp(const MyApp());
 }
 
@@ -163,10 +220,11 @@ List<List<dynamic>> loot = [
   ["Pique-nique de Mamie", 7]];
 
 class Item {
+  int _id;
   String _nom;
   int _poids;
 
-  Item(this._nom, this._poids);
+  Item(this._id, this._nom, this._poids);
 
   String getName() {
     return _nom;
@@ -174,6 +232,15 @@ class Item {
 
   int getPoids() {
     return _poids;
+  }
+
+  Map<String, dynamic> toMap() {
+    return {'id': _id, 'nom': _nom, 'poids': _poids};
+  }
+
+  @override
+  String toString() {
+    return 'Item{id: $_id, name: $_nom, age: $_poids}';
   }
 }
 
@@ -186,6 +253,7 @@ class Inventaire {
 
   String itemNameLoot = "";
   int itemWeightLoot = 0;
+  int countItem = 0;
 
   int checkFullOrEmpty(int listLengt, int type) {
     int rcheck = 0;
@@ -279,7 +347,8 @@ class Inventaire {
         if(count > 0) {
           return "null2";
         } else {
-          Item newItem = Item(itemNameLoot, itemWeightLoot);
+          
+          Item newItem = Item(countItem + 1, itemNameLoot, itemWeightLoot);
           items.add(newItem);
           return "$itemNameLoot ($itemWeightLoot kg)";
         }
