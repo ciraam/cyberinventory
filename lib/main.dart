@@ -14,55 +14,54 @@ Robot robot = Robot("CY-TORYx3", sacados);
 
 void main() async {
   // var db = await openDatabase('../bdd.db');
-  WidgetsFlutterBinding.ensureInitialized();
-  final database = openDatabase(path.join(await getDatabasesPath(), 'bdd.db'),
-    onCreate: (db, version) {
-      return db.execute('CREATE TABLE item(item_id INTEGER PRIMARY KEY, item_nom TEXT, item_poids INTEGER)');
-    },
-    version: 1,
-  );
-  Future<void> insertDog(Item item) async {
-    final db = await database;
-    await db.insert(
-      'item',
-      item.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-  var nI = Item(0, 'Rodéo des bois', 35);
-  await insertDog(nI);
-  Future<List<Item>> getItems() async {
-    final db = await database;
-    final List<Map<String, Object?>> itemMaps = await db.query('item');
-    return [
-      for (final {'item_id': id as int, 'item_nom': nom as String, 'item_poids': poids as int} 
-          in itemMaps)
-        Item(item_id: id, item_nom: nom, item_poids: poids),
-    ];
-  }
-  print(await getItems());
-  Future<void> updateItem(Item item) async {
-    final db = await database;
-    await db.update(
-      'item',
-      item.toMap(),
-      where: 'id = ?',
-      // Pass the Dog's id as a whereArg to prevent SQL injection.
-      whereArgs: [item._id],
-    );
-  }
-  Item nI2 = Item(0, "Ari", 0);
-  await updateItem(nI2);
-  print(await getItems());
-  Future<void> deleteItem(int id) async {
-    final db = await database;
-    await db.delete(
-      'item',
-      where: 'id = ?',
-      // Pass the Dog's id as a whereArg to prevent SQL injection.
-      whereArgs: [id],
-    );
-  }
+  // WidgetsFlutterBinding.ensureInitialized();
+  // final database = openDatabase(path.join(await getDatabasesPath(), 'bdd.db'),
+  //   onCreate: (db, version) {
+  //     return db.execute('CREATE TABLE item(id INTEGER PRIMARY KEY, nom TEXT, poids INTEGER)');
+  //   },
+  //   version: 1,
+  // );
+  // Future<void> insertItem(Item item) async {
+  //   final db = await database;
+  //   await db.insert(
+  //     'item',
+  //     item.toMap(),
+  //     conflictAlgorithm: ConflictAlgorithm.replace,
+  //   );
+  // }
+  // var nI = Item(0, 'Rodéo des bois', 35);
+  // await insertItem(nI);
+  // Future<List<Item>> getItems() async {
+  //   final db = await database;
+  //   final List<Map<String, Object?>> itemMaps = await db.query('item');
+  //   return [
+  //     for (final {'id': id as int, 'nom': nom as String, 'poids': poids as int} in itemMaps)
+  //       Item(id: id, nom: nom, poids: poids),
+  //   ];
+  // }
+  // print(await getItems());
+  // Future<void> updateItem(Item item) async {
+  //   final db = await database;
+  //   await db.update(
+  //     'item',
+  //     item.toMap(),
+  //     where: 'id = ?',
+  //     // Pass the Dog's id as a whereArg to prevent SQL injection.
+  //     whereArgs: [item._id],
+  //   );
+  // }
+  // Item nI2 = Item(0, "Ari", 0);
+  // await updateItem(nI2);
+  // print(await getItems());
+  // Future<void> deleteItem(int id) async {
+  //   final db = await database;
+  //   await db.delete(
+  //     'item',
+  //     where: 'id = ?',
+  //     // Pass the Dog's id as a whereArg to prevent SQL injection.
+  //     whereArgs: [id],
+  //   );
+  // }
   // await deleteItem(0);
 
   runApp(const MyApp());
@@ -96,35 +95,41 @@ class MyHomePage extends StatefulWidget {
 List<String> messages = [];
 
 class _MyHomePageState extends State<MyHomePage> {
-  ScrollController scrollController = ScrollController();
+  final ScrollController scrollController = ScrollController();
 
   void _scrollAuto() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
+
   void _voir() {
     setState(() {
       robot.voirInventaire();
       _scrollAuto();
     });
   }
+
   void _fouiller() {
     setState(() {
       robot.fouiller();
       _scrollAuto();
     });
   }
+
   void _ajouter() {
     setState(() {
       robot.ramasser();
       _scrollAuto();
     });
   }
+
   void _deposer() {
     setState(() {
       robot.deposer();
@@ -132,14 +137,35 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  bool _isErrorMessage(String message) {
+    final errorMessages = [
+      'Inventaire plein',
+      'Inventaire vide',
+      'inventaire plein',
+      'item introuvable',
+      'inventaire vide',
+      'atteint'
+    ];
+    return errorMessages.any((error) => message.contains(error));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(238, 54, 97, 70),
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),
+        title: Text(
+          widget.title,
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
-      body: Center(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("img/robotpixel.webp"),
+            fit: BoxFit.cover,
+          ),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -147,26 +173,29 @@ class _MyHomePageState extends State<MyHomePage> {
               robot._nom,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            Text("Nbr item : ${sacados.items.length}/${sacados.maxLength} | Poids total : ${sacados.poidsTotal()}/${sacados.maxPoids}kg"),
+            Text(
+              "Nbr item : ${sacados.items.length}/${sacados.maxLength} | "
+              "Poids total : ${sacados.poidsTotal()}/${sacados.maxPoids}kg",
+            ),
             Expanded(
               child: ListView.builder(
                 controller: scrollController,
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
-                bool isFull = messages[index].contains("Inventaire plein");
-                return ListTile(
-                  title: Text(
-                    messages[index],
-                    style: TextStyle(
-                      fontFamily: 'SourceCodePro',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15.5,
-                      backgroundColor: const Color.fromARGB(14, 17, 17, 17),
-                      color: isFull? Colors.red : Colors.black,
+                  final isError = _isErrorMessage(messages[index]);
+                  return ListTile(
+                    title: Text(
+                      messages[index],
+                      style: TextStyle(
+                        fontFamily: 'SourceCodePro',
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15.5,
+                        backgroundColor: isError ? const Color.fromARGB(134, 255, 255, 255): const Color.fromARGB(122, 113, 112, 112),
+                        color: isError ? Colors.red : Colors.white,
+                      ),
                     ),
-                  ),
-                );
-                }
+                  );
+                },
               ),
             ),
             Row(
@@ -207,7 +236,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-}
+
+
 
 List<List<dynamic>> loot = [
   ["Epée rouillée", 10],
@@ -240,7 +270,7 @@ class Item {
 
   @override
   String toString() {
-    return 'Item{id: $_id, name: $_nom, age: $_poids}';
+    return 'Item{id: $_id, nom: $_nom, poids: $_poids}';
   }
 }
 

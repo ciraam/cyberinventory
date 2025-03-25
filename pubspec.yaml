@@ -29,6 +29,8 @@ flutter:
     - assets/btn/voir.png
     - assets/btn/ramasser.png
     - assets/btn/deposer.png
+    - assets/img/robotpixel.webp
+    - assets/img/robotpixel.jpg
   fonts:
     - family: 'SourceCodePro'
       fonts:
