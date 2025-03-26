@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:math';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
 import 'dart:async';
 import 'package:path/path.dart' as path;
 
 // partie initialisation
 Inventaire sacados = Inventaire([], 5, 100);
-Robot robot = Robot("CY-TORYx3", sacados);
+Robot robot = Robot("{Nom par défaut}", sacados);
 
 
 
@@ -96,6 +96,8 @@ List<String> messages = [];
 
 class _MyHomePageState extends State<MyHomePage> {
   final ScrollController scrollController = ScrollController();
+  TextEditingController _textField = TextEditingController();
+  int nameFieldState = 1;
 
   void _scrollAuto() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -136,6 +138,15 @@ class _MyHomePageState extends State<MyHomePage> {
       _scrollAuto();
     });
   }
+    
+  void _modifierNom() {
+    setState(() {
+      if (nameFieldState == 1) {
+        robot.updateNom(_textField.text);
+      }
+      nameFieldState = nameFieldState == 1 ? 0 : 1;
+    });
+  }
 
   bool _isErrorMessage(String message) {
     final errorMessages = [
@@ -169,10 +180,32 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              robot._nom,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            if (nameFieldState == 0)
+              Text(
+                  robot._nom,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(
+                    width: 250,
+                    child: TextField(
+                      controller: _textField,
+                      decoration: InputDecoration(
+                        labelText: 'Nom du robot',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 7),
+                  ElevatedButton(
+                    onPressed: _modifierNom,
+                    child: Text('Confirmer'),
+                  ),
+                ],
+              ),
             Text(
               "Nbr item : ${sacados.items.length}/${sacados.maxLength} | "
               "Poids total : ${sacados.poidsTotal()}/${sacados.maxPoids}kg",
@@ -236,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
+}
 
 
 List<List<dynamic>> loot = [
@@ -411,6 +444,10 @@ class Robot {
   Inventaire _inventaire;
 
   Robot(this._nom, this._inventaire);
+
+  String updateNom(String newNom) {
+    return _nom = newNom;
+  }
 
   void fouiller() {
     String item = _inventaire.aleatoireItem();
